@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import bcrypt from "bcryptjs";
 
 // ============
 // GET
@@ -51,6 +52,10 @@ export const createUser = async (req, res) => {
   if (!name || !age || !email || !password) {
     return res.status(400).json({ error: "Faltan datos" });
   }
+
+  // hash
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   try {
     const existingUser = await User.findOne({ email: email });
     if (existingUser) {
@@ -58,7 +63,7 @@ export const createUser = async (req, res) => {
         .status(409)
         .json({ error: "Ya existe un usuario con ese email" });
     }
-    const newUser = await User.create({ name, age, email, password });
+    const newUser = await User.create({ name, age, email, password: hashedPassword });
     return res.status(201).json(newUser);
   } catch (error) {
     res
