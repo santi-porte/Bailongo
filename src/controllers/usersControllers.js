@@ -50,6 +50,7 @@ export const getUser = async (req, res) => {
 export const createUser = async (req, res) => {
   const { name, age, email, password } = req.body ?? {};
   if (!name || !age || !email || !password) {
+    console.log(name, age, email, password);
     return res.status(400).json({ error: "Faltan datos" });
   }
 
