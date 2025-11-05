@@ -5,6 +5,8 @@ import connectDB from "./src/config/db.js";
 import usersRoutes from "./src/routes/usersRoutes.js";
 import artistsRoutes from "./src/routes/artistsRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
+import songRoutes from "./src/routes/songRoutes.js"; 
+import albumRoutes from "./src/routes/albumRoutes.js";
 
 dotenv.config();
 
@@ -19,7 +21,9 @@ app.use(cookieParser());
 app.use("/", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/artists", artistsRoutes);
+app.use("/api/songs", songRoutes); 
+app.use("/api/albums", albumRoutes);
 
 app.listen(PORT, () => {
-  console.log("Servidor corriendo en http://localhost:", PORT);
+  console.log("Servidor corriendo en http://localhost:" + PORT);
 });
