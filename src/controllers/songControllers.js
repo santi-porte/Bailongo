@@ -1,4 +1,6 @@
 import Song from "../models/Song.js";
+import { getArtistByName as findArtistByName } from "./artistControllers.js";
+
 
 // ============
 // GET
@@ -54,16 +56,28 @@ export const getSong = async (req, res) => {
 
 // crear canción
 export const createSong = async (req, res) => {
-  const { titulo, duracion, genero, artista, album, comentarios } = req.body ?? {};
+  const { titulo, duracion, genero, artistName, album, comentarios } = req.body ?? {};
 
-  if (!titulo || !duracion || !genero || !artista) {
+  if (!titulo || !duracion || !genero || !artistName) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
   }
 
   try {
+
+
+    // Buscar el artista por nombre
+    const artista = await findArtistByName(artistName);
+    if (!artista) {
+
+      console.error("Artista no encontrado con el nombre proporcionado");
+    }
+
+    console.log("Artista encontrado:", artista);
+    const artistaId = artista._id;
+
     const existingSong = await Song.findOne({
       titulo: { $regex: `^${titulo}$`, $options: "i" },
-      artista,
+      artista: artistaId,
     });
 
     if (existingSong) {
@@ -76,10 +90,11 @@ export const createSong = async (req, res) => {
       titulo,
       duracion,
       genero,
-      artista,
+      artista: artistaId,
       album,
       comentarios: comentarios || [],
     });
+    console.log(newSong);
 
     return res.status(201).json(newSong);
   } catch (error) {
