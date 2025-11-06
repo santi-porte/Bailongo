@@ -1,4 +1,6 @@
 import Album from "../models/Album.js";
+import { getArtistByName as findArtistByName } from "./artistControllers.js";
+
 
 // ============
 // GET
@@ -54,16 +56,21 @@ export const getAlbum = async (req, res) => {
 
 // crear álbum
 export const createAlbum = async (req, res) => {
-  const { titulo, artista, canciones } = req.body ?? {};
+  const { titulo, artistName, canciones } = req.body ?? {};
 
-  if (!titulo || !artista) {
+  if (!titulo || !artistName) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
   }
-
+  // Buscar el artista por nombre
+  const artista = await findArtistByName(artistName);
+  if (!artista) {
+    console.error("Artista no encontrado con el nombre proporcionado");
+  }
+  const artistaId = artista._id;
   try {
     const existingAlbum = await Album.findOne({
       titulo: { $regex: `^${titulo}$`, $options: "i" },
-      artista,
+      artista: artistaId,
     });
 
     if (existingAlbum) {
@@ -74,7 +81,7 @@ export const createAlbum = async (req, res) => {
 
     const newAlbum = await Album.create({
       titulo,
-      artista,
+      artista: artistaId,
       canciones: canciones || [],
     });
 

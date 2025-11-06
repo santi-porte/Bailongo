@@ -104,6 +104,29 @@ export const createSong = async (req, res) => {
   }
 };
 
+export const getSongtByName = async (name) => {
+
+  if (!name) {
+    throw new Error("Nombre necesario para la búsqueda");
+  }
+
+  try {
+    const song = await Song.findOne({
+      titulo: {
+        $regex: `^${name}$`,
+        $options: "i",
+      },
+    });
+
+
+    return song;
+  } catch (error) {
+    console.error("Error al buscar la canción:", error);
+    return null;
+  }
+};
+
+
 // ============
 // PUT
 // ============
