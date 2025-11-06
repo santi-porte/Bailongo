@@ -5,6 +5,7 @@ const albumSchema = mongoose.Schema(
     titulo: { type: String, required: true },
     artista: { type: mongoose.Schema.Types.ObjectId, ref: "Artist", required: true },
     canciones: [{ type: mongoose.Schema.Types.ObjectId, ref: "Song" }],
+    comentarios: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   },
   { timestamps: true }
 );
