@@ -9,8 +9,16 @@ import { getArtistByName as findArtistByName } from "./artistControllers.js";
 // obtener todos los álbumes
 export const getAlbums = async (req, res) => {
   try {
-    const albums = await Album.find().populate("artista canciones");
-
+    const albums = await Album.find()
+      .populate("artista", "name country genres")
+      .populate("canciones", "titulo duracion genero")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email"
+        }
+      });
     if (!albums || albums.length === 0) {
       return res.status(404).json({ error: "Álbumes no encontrados" });
     }
@@ -36,7 +44,16 @@ export const getAlbum = async (req, res) => {
         $regex: `^${titulo}`,
         $options: "i",
       },
-    }).populate("artista canciones");
+    })
+      .populate("artista", "name country genres")
+      .populate("canciones", "titulo duracion genero")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email"
+        }
+      });
 
     if (!album || album.length === 0) {
       return res.status(404).json({ error: "Álbum no encontrado" });

@@ -9,7 +9,16 @@ import { getArtistByName as findArtistByName } from "./artistControllers.js";
 // obtener todas las canciones
 export const getSongs = async (req, res) => {
   try {
-    const songs = await Song.find().populate("artista album");
+    const songs = await Song.find()
+      .populate("artista", "name country genres")
+      .populate("album", "titulo")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email" // ✅ Solo name y email del usuario
+        }
+      });
 
     if (!songs || songs.length === 0) {
       return res.status(404).json({ error: "Canciones no encontradas" });
@@ -36,7 +45,16 @@ export const getSong = async (req, res) => {
         $regex: `^${titulo}`,
         $options: "i",
       },
-    }).populate("artista album");
+    }).populate("artista", "name country genres")
+      .populate("album", "titulo")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email"
+        }
+      });
+    ;
 
     if (!song || song.length === 0) {
       return res.status(404).json({ error: "Canción no encontrada" });
