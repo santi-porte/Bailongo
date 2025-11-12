@@ -1,4 +1,6 @@
 import Song from "../models/Song.js";
+import { getArtistByName as findArtistByName } from "./artistControllers.js";
+
 
 // ============
 // GET
@@ -7,7 +9,16 @@ import Song from "../models/Song.js";
 // obtener todas las canciones
 export const getSongs = async (req, res) => {
   try {
-    const songs = await Song.find().populate("artista album");
+    const songs = await Song.find()
+      .populate("artista", "name country genres")
+      .populate("album", "titulo")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email" // ✅ Solo name y email del usuario
+        }
+      });
 
     if (!songs || songs.length === 0) {
       return res.status(404).json({ error: "Canciones no encontradas" });
@@ -34,7 +45,16 @@ export const getSong = async (req, res) => {
         $regex: `^${titulo}`,
         $options: "i",
       },
-    }).populate("artista album");
+    }).populate("artista", "name country genres")
+      .populate("album", "titulo")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email"
+        }
+      });
+    ;
 
     if (!song || song.length === 0) {
       return res.status(404).json({ error: "Canción no encontrada" });
@@ -54,16 +74,28 @@ export const getSong = async (req, res) => {
 
 // crear canción
 export const createSong = async (req, res) => {
-  const { titulo, duracion, genero, artista, album, comentarios } = req.body ?? {};
+  const { titulo, duracion, genero, artistName, album, comentarios } = req.body ?? {};
 
-  if (!titulo || !duracion || !genero || !artista) {
+  if (!titulo || !duracion || !genero || !artistName) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
   }
 
   try {
+
+
+    // Buscar el artista por nombre
+    const artista = await findArtistByName(artistName);
+    if (!artista) {
+
+      console.error("Artista no encontrado con el nombre proporcionado");
+    }
+
+    console.log("Artista encontrado:", artista);
+    const artistaId = artista._id;
+
     const existingSong = await Song.findOne({
       titulo: { $regex: `^${titulo}$`, $options: "i" },
-      artista,
+      artista: artistaId,
     });
 
     if (existingSong) {
@@ -76,10 +108,11 @@ export const createSong = async (req, res) => {
       titulo,
       duracion,
       genero,
-      artista,
+      artista: artistaId,
       album,
       comentarios: comentarios || [],
     });
+    console.log(newSong);
 
     return res.status(201).json(newSong);
   } catch (error) {
@@ -88,6 +121,29 @@ export const createSong = async (req, res) => {
       .json({ error: "Error al crear la canción", errorMsg: error });
   }
 };
+
+export const getSongtByName = async (name) => {
+
+  if (!name) {
+    throw new Error("Nombre necesario para la búsqueda");
+  }
+
+  try {
+    const song = await Song.findOne({
+      titulo: {
+        $regex: `^${name}$`,
+        $options: "i",
+      },
+    });
+
+
+    return song;
+  } catch (error) {
+    console.error("Error al buscar la canción:", error);
+    return null;
+  }
+};
+
 
 // ============
 // PUT

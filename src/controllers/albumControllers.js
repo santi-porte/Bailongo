@@ -1,4 +1,6 @@
 import Album from "../models/Album.js";
+import { getArtistByName as findArtistByName } from "./artistControllers.js";
+
 
 // ============
 // GET
@@ -7,8 +9,16 @@ import Album from "../models/Album.js";
 // obtener todos los álbumes
 export const getAlbums = async (req, res) => {
   try {
-    const albums = await Album.find().populate("artista canciones");
-
+    const albums = await Album.find()
+      .populate("artista", "name country genres")
+      .populate("canciones", "titulo duracion genero")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email"
+        }
+      });
     if (!albums || albums.length === 0) {
       return res.status(404).json({ error: "Álbumes no encontrados" });
     }
@@ -34,7 +44,16 @@ export const getAlbum = async (req, res) => {
         $regex: `^${titulo}`,
         $options: "i",
       },
-    }).populate("artista canciones");
+    })
+      .populate("artista", "name country genres")
+      .populate("canciones", "titulo duracion genero")
+      .populate({
+        path: "comentarios",
+        populate: {
+          path: "user",
+          select: "name email"
+        }
+      });
 
     if (!album || album.length === 0) {
       return res.status(404).json({ error: "Álbum no encontrado" });
@@ -54,16 +73,21 @@ export const getAlbum = async (req, res) => {
 
 // crear álbum
 export const createAlbum = async (req, res) => {
-  const { titulo, artista, canciones } = req.body ?? {};
+  const { titulo, artistName, canciones } = req.body ?? {};
 
-  if (!titulo || !artista) {
+  if (!titulo || !artistName) {
     return res.status(400).json({ error: "Faltan datos obligatorios" });
   }
-
+  // Buscar el artista por nombre
+  const artista = await findArtistByName(artistName);
+  if (!artista) {
+    console.error("Artista no encontrado con el nombre proporcionado");
+  }
+  const artistaId = artista._id;
   try {
     const existingAlbum = await Album.findOne({
       titulo: { $regex: `^${titulo}$`, $options: "i" },
-      artista,
+      artista: artistaId,
     });
 
     if (existingAlbum) {
@@ -74,7 +98,7 @@ export const createAlbum = async (req, res) => {
 
     const newAlbum = await Album.create({
       titulo,
-      artista,
+      artista: artistaId,
       canciones: canciones || [],
     });
 

@@ -34,7 +34,7 @@ export const getArtist = async (req, res) => {
         $options: "i",
       },
     });
-    if (!artist || artist.length === 0) {
+    if (artist.length === 0) {
       return res.status(400).json({ error: "Artista no encontrado" });
     }
     return res.status(200).json(artist);
@@ -44,6 +44,33 @@ export const getArtist = async (req, res) => {
       .json({ error: "Error al buscar el artista", errorMsg: error });
   }
 };
+
+export const getArtistByName = async (name) => {
+
+  if (!name) {
+    throw new Error("Nombre necesario para la búsqueda");
+  }
+
+  try {
+    const artist = await Artist.findOne({
+      name: {
+        $regex: `^${name}$`,
+        $options: "i",
+      },
+    });
+
+
+    return artist;
+  } catch (error) {
+    console.error("Error al buscar el artista:", error);
+    return null;
+  }
+};
+
+
+
+
+
 
 // ============
 // POST

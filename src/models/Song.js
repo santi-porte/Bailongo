@@ -8,6 +8,7 @@ const songSchema = mongoose.Schema(
     artista: { type: mongoose.Schema.Types.ObjectId, ref: "Artist", required: true },
     album: { type: mongoose.Schema.Types.ObjectId, ref: "Album" },
     fechaDeSubida: { type: Date, default: Date.now },
+    comentarios: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   },
   { timestamps: true }
 );
