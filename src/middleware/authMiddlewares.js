@@ -1,23 +1,41 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-export const protectRoute = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Token no proporcionado" });
-  }
-
-  const token = authHeader.split(" ")[1];
-
+export const authMiddleware = async (req, res, next) => {
   try {
-    const decodificado = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = {
-      id: decodificado.id,
-      email: decodificado.email
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Token no proporcionado" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    req.user = user; // Guardamos el usuario en el request
+    next();
+  } catch (error) {
+    console.error("Error en authMiddleware:", error);
+    return res.status(401).json({ message: "Token inválido o expirado" });
+  }
+};
+
+export const authorizeRoles = (...rolesPermitidos) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    if (!rolesPermitidos.includes(req.user.role)) {
+      return res.status(403).json({ message: "Acceso denegado: rol no autorizado" });
     }
 
     next();
-  } catch (error) {
-    return res.status(403).json({ error: "Token invalido o expirado" });
-  }
+  };
 };
+
