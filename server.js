@@ -19,7 +19,7 @@ connectDB();
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/artists", artistsRoutes);
 app.use("/api/songs", songRoutes);
