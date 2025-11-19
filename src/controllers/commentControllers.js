@@ -11,7 +11,7 @@ const addComment = async (model, id, userId, text) => {
             throw new Error("Elemento no encontrado");
         }
 
-        // ✅ Asegurar que userId es un ObjectId válido
+
         if (!userId) {
             throw new Error("Usuario no autenticado");
         }
